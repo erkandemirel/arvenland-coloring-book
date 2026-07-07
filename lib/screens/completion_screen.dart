@@ -25,6 +25,7 @@ class _CompletionScreenState extends State<CompletionScreen>
     with TickerProviderStateMixin {
   late AnimationController _starController;
   late AnimationController _cardController;
+  late AnimationController _confettiController;
   late Animation<double> _cardAnimation;
 
   @override
@@ -41,13 +42,21 @@ class _CompletionScreenState extends State<CompletionScreen>
       duration: const Duration(milliseconds: 600),
     );
 
+    _confettiController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
     _cardAnimation = CurvedAnimation(
       parent: _cardController,
       curve: Curves.elasticOut,
     );
 
     Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) _cardController.forward();
+      if (mounted) {
+        _cardController.forward();
+        _confettiController.forward();
+      }
     });
   }
 
@@ -55,12 +64,11 @@ class _CompletionScreenState extends State<CompletionScreen>
   void dispose() {
     _starController.dispose();
     _cardController.dispose();
+    _confettiController.dispose();
     super.dispose();
   }
 
   void _saveImage(BuildContext context) {
-    // To actually save to gallery, add image_gallery_saver package:
-    // await ImageGallerySaver.saveImage(widget.imageBytes);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Row(
@@ -80,8 +88,6 @@ class _CompletionScreenState extends State<CompletionScreen>
   }
 
   void _shareImage(BuildContext context) {
-    // To share, add share_plus package:
-    // await Share.shareXFiles([XFile.fromData(widget.imageBytes, mimeType: 'image/png')]);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Row(
@@ -115,6 +121,7 @@ class _CompletionScreenState extends State<CompletionScreen>
           child: Stack(
             children: [
               _FloatingStars(controller: _starController),
+              _ConfettiBlast(controller: _confettiController),
               Column(
                 children: [
                   _buildTopSection(),
@@ -135,12 +142,26 @@ class _CompletionScreenState extends State<CompletionScreen>
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
       child: Column(
         children: [
-          const Text('🎉', style: TextStyle(fontSize: 52)),
-          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFFD166).withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: const Text('🎉', style: TextStyle(fontSize: 46)),
+          ),
+          const SizedBox(height: 12),
           Text(
             'Harika iş çıkardın!',
             style: GoogleFonts.nunito(
-              fontSize: 28,
+              fontSize: 30,
               fontWeight: FontWeight.w900,
               color: const Color(0xFF3D3D5C),
             ),
@@ -166,7 +187,7 @@ class _CompletionScreenState extends State<CompletionScreen>
         scale: _cardAnimation,
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(28),
             color: Colors.white,
             boxShadow: const [
               BoxShadow(
@@ -175,6 +196,7 @@ class _CompletionScreenState extends State<CompletionScreen>
                 offset: Offset(0, 8),
               ),
             ],
+            border: Border.all(color: Colors.white.withOpacity(0.8), width: 5),
           ),
           clipBehavior: Clip.hardEdge,
           child: Column(
@@ -187,24 +209,24 @@ class _CompletionScreenState extends State<CompletionScreen>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                 color: const Color(0xFFFAFAFA),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.star_rounded,
-                        color: Color(0xFFFFD700), size: 22),
+                        color: Color(0xFFFFD700), size: 24),
                     const Icon(Icons.star_rounded,
-                        color: Color(0xFFFFD700), size: 22),
+                        color: Color(0xFFFFD700), size: 24),
                     const Icon(Icons.star_rounded,
-                        color: Color(0xFFFFD700), size: 22),
-                    const SizedBox(width: 8),
+                        color: Color(0xFFFFD700), size: 24),
+                    const SizedBox(width: 10),
                     Text(
                       'Süper ressam!',
                       style: GoogleFonts.nunito(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                         color: const Color(0xFF6B6B8A),
-                        fontSize: 15,
+                        fontSize: 16,
                       ),
                     ),
                   ],
@@ -252,18 +274,16 @@ class _CompletionScreenState extends State<CompletionScreen>
                 (route) => false,
               ),
               icon: const Icon(Icons.palette_rounded),
-              label: Text('Yeni Çizim Seç', style: GoogleFonts.nunito(fontWeight: FontWeight.w700, fontSize: 15)),
+              label: Text('Yeni Çizim Seç',
+                  style: GoogleFonts.nunito(
+                      fontWeight: FontWeight.w800, fontSize: 15)),
               style: OutlinedButton.styleFrom(
                 backgroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 side: const BorderSide(color: Color(0xFFE4E2EA)),
                 foregroundColor: const Color(0xFFE6B400),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                textStyle: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
+                  borderRadius: BorderRadius.circular(18),
                 ),
               ),
             ),
@@ -291,18 +311,18 @@ class _ActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton.icon(
       onPressed: onTap,
-      icon: Icon(icon, size: 20),
+      icon: Icon(icon, size: 22),
       label: Text(label),
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
         foregroundColor: color,
         padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        elevation: 1,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        elevation: 2,
         shadowColor: Colors.black26,
         textStyle: const TextStyle(
           fontSize: 15,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );
@@ -403,4 +423,70 @@ class _StarsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_StarsPainter old) => old.progress != progress;
+}
+
+class _ConfettiBlast extends StatelessWidget {
+  final AnimationController controller;
+
+  const _ConfettiBlast({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (_, __) {
+        return IgnorePointer(
+          child: CustomPaint(
+            size: MediaQuery.of(context).size,
+            painter: _ConfettiPainter(progress: controller.value),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ConfettiPainter extends CustomPainter {
+  final double progress;
+
+  const _ConfettiPainter({required this.progress});
+
+  static const _colors = [
+    Color(0xFFFF6B6B),
+    Color(0xFFFFD166),
+    Color(0xFF6BCB77),
+    Color(0xFF74B9FF),
+    Color(0xFFA78BFA),
+    Color(0xFFF472B6),
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rnd = math.Random(42);
+    for (int i = 0; i < 40; i++) {
+      final startX = rnd.nextDouble() * size.width;
+      final startY = -20 - rnd.nextDouble() * 100;
+      final x = startX + math.sin(progress * math.pi * 2 + i) * 40;
+      final y = startY + progress * (size.height + 150);
+      final rotation = progress * math.pi * 4 * (rnd.nextDouble() - 0.5);
+      final color = _colors[i % _colors.length];
+
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(rotation);
+      final rect = Rect.fromCenter(
+        center: Offset.zero,
+        width: 8 + rnd.nextDouble() * 6,
+        height: 5 + rnd.nextDouble() * 4,
+      );
+      canvas.drawRect(
+        rect,
+        Paint()..color = color.withOpacity(1 - progress * 0.5),
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ConfettiPainter old) => old.progress != progress;
 }

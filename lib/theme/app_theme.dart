@@ -7,9 +7,9 @@ class AppTheme {
   static const Color secondary = Color(0xFF74B9FF);   // sky blue
   static const Color accent = Color(0xFFFFD166);      // warm yellow
   static const Color success = Color(0xFF6BCB77);     // mint green
-  static const Color bgStart = Color(0xFFFFFFFF);     // beyaz
+  static const Color bgStart = Color(0xFFFFFDF8);     // warm white
   static const Color bgEnd = Color(0xFFF4F4F6);       // çok açık gri
-  static const Color textDark = Color(0xFF3D3D5C);    // dark navy-purple (daha soft than #333)
+  static const Color textDark = Color(0xFF3D3D5C);    // dark navy-purple
 
   // Boya paleti — pastel ve soft tonlar
   static const List<Color> palette = [
