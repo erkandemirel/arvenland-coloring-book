@@ -143,7 +143,6 @@ class Drawing {
   final String name;
   final DrawingCategory category;
   final String svgData;
-  final String funFact;
   final String emoji;
 
   const Drawing({
@@ -151,7 +150,6 @@ class Drawing {
     required this.name,
     required this.category,
     required this.svgData,
-    required this.funFact,
     required this.emoji,
   });
 }

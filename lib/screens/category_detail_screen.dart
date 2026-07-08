@@ -189,7 +189,7 @@ class _CleanDrawingCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    '#${index.toString().padLeft(2, '0')}',
+                    '$index',
                     style: GoogleFonts.nunito(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,

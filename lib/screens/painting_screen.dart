@@ -11,7 +11,6 @@ import '../models/stroke.dart';
 import '../providers/painting_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/drawing_image.dart';
-import '../widgets/info_dialog.dart';
 import 'completion_screen.dart';
 
 class PaintingScreen extends StatefulWidget {
@@ -119,10 +118,8 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          _RoundIcon(
-            icon: Icons.info_outline_rounded,
-            onTap: () => InfoDialog.show(context, drawing),
-          ),
+          // Üst barın simetrisi için sağda boşluk
+          const SizedBox(width: 44),
         ],
       ),
     );
