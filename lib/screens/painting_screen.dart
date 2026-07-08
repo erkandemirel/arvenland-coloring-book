@@ -55,7 +55,8 @@ class _PaintingView extends StatelessWidget {
       if (context.mounted) {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => CompletionScreen(drawing: drawing, imageBytes: bytes),
+            builder: (_) =>
+                CompletionScreen(drawing: drawing, imageBytes: bytes),
           ),
         );
       }
@@ -71,128 +72,88 @@ class _PaintingView extends StatelessWidget {
     }
   }
 
-  Future<void> _confirmReset(BuildContext context) async {
-    final provider = context.read<PaintingProvider>();
-    if (!provider.canUndo) return;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFAF6EE),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _TopBar(drawing: drawing),
+            Expanded(
+              child: _PaintingCanvas(drawing: drawing, boundaryKey: canvasKey),
+            ),
+            _BottomToolPanel(onComplete: () => _complete(context)),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text('Sıfırla?',
-            style: GoogleFonts.nunito(
-                fontWeight: FontWeight.w800, color: AppTheme.textDark)),
-        content: Text('Tüm boyamalar silinecek. Emin misin?',
-            style: GoogleFonts.nunito(
-                fontSize: 15, color: const Color(0xFF6B6B8A))),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFF8888AA),
-            ),
-            child: Text('Hayır',
-                style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+// ── Üst Bar ─────────────────────────────────────────────────────────────────
+
+class _TopBar extends StatelessWidget {
+  final Drawing drawing;
+  const _TopBar({required this.drawing});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
+      child: Row(
+        children: [
+          _RoundIcon(
+            icon: Icons.arrow_back_ios_new_rounded,
+            onTap: () => Navigator.of(context).pop(),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF6B6B),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+          Expanded(
+            child: Center(
+              child: Text(
+                drawing.name,
+                style: GoogleFonts.nunito(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w900,
+                  color: AppTheme.textDark,
+                ),
+              ),
             ),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('Evet, Sıfırla',
-                style: GoogleFonts.nunito(fontWeight: FontWeight.w700)),
+          ),
+          _RoundIcon(
+            icon: Icons.info_outline_rounded,
+            onTap: () => InfoDialog.show(context, drawing),
           ),
         ],
       ),
     );
-
-    if (confirm == true && context.mounted) {
-      context.read<PaintingProvider>().reset();
-    }
   }
+}
+
+class _RoundIcon extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  const _RoundIcon({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFFFDF8),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(drawing.emoji, style: const TextStyle(fontSize: 24)),
-            const SizedBox(width: 8),
-            Text(
-              drawing.name,
-              style: GoogleFonts.nunito(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.textDark,
-              ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: const Icon(Icons.info_outline_rounded,
-                  color: Color(0xFF8A8AA3), size: 22),
-            ),
-            onPressed: () => InfoDialog.show(context, drawing),
-            tooltip: 'Eğlenceli bilgi',
-          ),
-          const SizedBox(width: 8),
-        ],
+        child: Icon(icon, size: 20, color: const Color(0xFF6B6B8A)),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _PaintingCanvas(drawing: drawing, boundaryKey: canvasKey),
-          ),
-          const _BottomToolPanel(),
-        ],
-      ),
-      floatingActionButton: _CompleteButton(
-        onComplete: () => _complete(context),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
@@ -208,46 +169,57 @@ class _PaintingCanvas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PaintingProvider>();
-
-    return LayoutBuilder(builder: (context, constraints) {
-      final available = constraints.maxWidth / constraints.maxHeight;
-      final aspect = available.clamp(0.72, 1.4);
-
-      return Container(
-        color: const Color(0xFFEDEDF1),
-        child: Center(
-          child: AspectRatio(
-            aspectRatio: aspect,
-            child: RepaintBoundary(
-              key: boundaryKey,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: GestureDetector(
-                  onPanStart: (d) => provider.startStroke(d.localPosition),
-                  onPanUpdate: (d) => provider.continueStroke(d.localPosition),
-                  onPanEnd: (_) => provider.endStroke(),
-                  child: Container(
-                    color: Colors.white,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        DrawingImage(source: drawing.svgData, fit: BoxFit.fill),
-                        CustomPaint(
-                          painter: _StrokePainter(
-                            strokes: provider.strokes,
-                            currentStroke: provider.currentStroke,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 6, 14, 12),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: LayoutBuilder(builder: (context, constraints) {
+            final available = constraints.maxWidth / constraints.maxHeight;
+            final aspect = available.clamp(0.72, 1.4);
+            return Center(
+              child: AspectRatio(
+                aspectRatio: aspect,
+                child: RepaintBoundary(
+                  key: boundaryKey,
+                  child: GestureDetector(
+                    onPanStart: (d) => provider.startStroke(d.localPosition),
+                    onPanUpdate: (d) => provider.continueStroke(d.localPosition),
+                    onPanEnd: (_) => provider.endStroke(),
+                    child: Container(
+                      color: Colors.white,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          DrawingImage(source: drawing.svgData, fit: BoxFit.fill),
+                          CustomPaint(
+                            painter: _StrokePainter(
+                              strokes: provider.strokes,
+                              currentStroke: provider.currentStroke,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
+            );
+          }),
         ),
-      );
-    });
+      ),
+    );
   }
 }
 
@@ -393,33 +365,39 @@ class _StrokePainter extends CustomPainter {
 // ── Alt Araç Paneli ─────────────────────────────────────────────────────────
 
 class _BottomToolPanel extends StatelessWidget {
-  const _BottomToolPanel();
+  final VoidCallback onComplete;
+  const _BottomToolPanel({required this.onComplete});
 
+  // Zenginleştirilmiş çocuk paleti — gruplandırılmış tonlar.
   static const List<Color> _palette = [
-    Color(0xFFFF6B6B),
-    Color(0xFFF472B6),
-    Color(0xFFFF8C42),
-    Color(0xFFFFD166),
-    Color(0xFF6BCB77),
-    Color(0xFF2EC4B6),
-    Color(0xFF74B9FF),
-    Color(0xFF4D96FF),
-    Color(0xFFA78BFA),
-    Color(0xFFC084FC),
-    Color(0xFFC4956A),
-    Color(0xFF94A3B8),
-    Color(0xFF3D3D5C),
-    Color(0xFFFFFFFF),
+    // Kırmızı & pembe
+    Color(0xFFFF5A5A), Color(0xFFFF7A9C), Color(0xFFF472B6), Color(0xFFFFB3B3),
+    // Turuncu & sarı
+    Color(0xFFFF8C42), Color(0xFFFFA94D), Color(0xFFFFD166), Color(0xFFFFEB99),
+    // Yeşiller
+    Color(0xFF6BCB77), Color(0xFF2EC4B6), Color(0xFFA8E6CF), Color(0xFF9DE38A),
+    // Maviler
+    Color(0xFF74B9FF), Color(0xFF4D96FF), Color(0xFF60D0E4), Color(0xFFB5DEFF),
+    // Morlar
+    Color(0xFFA78BFA), Color(0xFFC084FC), Color(0xFFD8B4FE), Color(0xFFE9D5FF),
+    // Kahve & ten
+    Color(0xFF8B5E3C), Color(0xFFC4956A), Color(0xFFE0AC69), Color(0xFFF5CBA7),
+    // Nötr
+    Color(0xFF3D3D5C), Color(0xFF6B6B8A), Color(0xFFB8B8C8), Color(0xFFFFFFFF),
   ];
 
-  static const _brushes = [
-    BrushType.keceli,
-    BrushType.firca,
-    BrushType.pastel,
-    BrushType.fosforlu,
-    BrushType.sprey,
-    BrushType.silgi,
+  static const _brushes = <_BrushDef>[
+    _BrushDef(BrushType.keceli, 'Keçeli', Icons.edit_rounded),
+    _BrushDef(BrushType.firca, 'Fırça', Icons.brush_rounded),
+    _BrushDef(BrushType.pastel, 'Pastel', Icons.colorize_rounded),
+    _BrushDef(BrushType.kursun, 'Kurşun', Icons.create_rounded),
+    _BrushDef(BrushType.fosforlu, 'Fosforlu', Icons.highlight_rounded),
+    _BrushDef(BrushType.sprey, 'Sprey', Icons.water_drop_rounded),
+    _BrushDef(BrushType.silgi, 'Silgi', Icons.auto_fix_normal_rounded),
   ];
+
+  static const _sizes = <double>[6, 12, 20, 32];
+  static const _sizeLabels = <String>['S', 'M', 'L', 'XL'];
 
   @override
   Widget build(BuildContext context) {
@@ -428,12 +406,12 @@ class _BottomToolPanel extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -4),
+            blurRadius: 24,
+            offset: const Offset(0, -6),
           ),
         ],
       ),
@@ -442,10 +420,10 @@ class _BottomToolPanel extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const SizedBox(height: 10),
             // Renk paleti
-            Container(
-              height: 74,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+            SizedBox(
+              height: 60,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -461,224 +439,115 @@ class _BottomToolPanel extends StatelessWidget {
                 },
               ),
             ),
-            const Divider(height: 1, indent: 20, endIndent: 20),
-            // Fırça seçimi
-            Container(
-              height: 72,
-              padding: const EdgeInsets.symmetric(vertical: 10),
+            const SizedBox(height: 6),
+            // Fırça araçları
+            SizedBox(
+              height: 68,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 itemCount: _brushes.length,
                 itemBuilder: (context, index) {
                   final brush = _brushes[index];
-                  final isSelected = provider.selectedBrush == brush;
+                  final isSelected = provider.selectedBrush == brush.type;
                   return _BrushButton(
-                    brush: brush,
+                    def: brush,
                     color: provider.selectedColor,
                     isSelected: isSelected,
-                    onTap: () => provider.setBrush(brush),
+                    onTap: () => provider.setBrush(brush.type),
                   );
                 },
               ),
             ),
-            // Kalınlık + aksiyonlar
-            _SizeAndActions(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ColorBlob extends StatelessWidget {
-  final Color color;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _ColorBlob({
-    required this.color,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        width: isSelected ? 52 : 44,
-        height: isSelected ? 52 : 44,
-        margin: const EdgeInsets.symmetric(horizontal: 5),
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: isSelected ? const Color(0xFF3D3D5C) : Colors.white,
-            width: isSelected ? 3 : 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.35),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+            // Kalınlık + aksiyonlar — dar ekranda taşmasın diye kaydırılabilir
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
+              child: LayoutBuilder(builder: (context, constraints) {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints:
+                        BoxConstraints(minWidth: constraints.maxWidth),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: List.generate(_sizes.length, (i) {
+                            final size = _sizes[i];
+                            final active =
+                                (provider.brushSize - size).abs() < 0.5;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: _SizeDot(
+                                diameter: 14.0 + i * 6,
+                                label: _sizeLabels[i],
+                                color: provider.isEraser
+                                    ? Colors.grey.shade500
+                                    : provider.selectedColor,
+                                active: active,
+                                onTap: () => provider.setBrushSize(size),
+                              ),
+                            );
+                          }),
+                        ),
+                        const SizedBox(width: 12),
+                        Row(
+                          children: [
+                            _ActionIcon(
+                              icon: Icons.undo_rounded,
+                              enabled: provider.canUndo,
+                              onTap: provider.undo,
+                            ),
+                            const SizedBox(width: 6),
+                            _ActionIcon(
+                              icon: Icons.redo_rounded,
+                              enabled: provider.canRedo,
+                              onTap: provider.redo,
+                            ),
+                            const SizedBox(width: 6),
+                            _ActionIcon(
+                              icon: Icons.delete_outline_rounded,
+                              enabled: provider.canUndo,
+                              onTap: () => _confirmReset(context),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
             ),
-          ],
-        ),
-        child: isSelected
-            ? const Icon(Icons.check_rounded,
-                color: Colors.white, size: 22)
-            : null,
-      ),
-    );
-  }
-}
-
-class _BrushButton extends StatelessWidget {
-  final BrushType brush;
-  final Color color;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _BrushButton({
-    required this.brush,
-    required this.color,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isEraser = brush == BrushType.silgi;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        margin: const EdgeInsets.symmetric(horizontal: 5),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? (isEraser ? Colors.grey.shade200 : color.withOpacity(0.15))
-              : Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected
-                ? (isEraser ? Colors.grey.shade400 : color)
-                : Colors.grey.shade200,
-            width: 2,
-          ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _brushIcon(brush),
-              color: isEraser ? Colors.grey.shade500 : color,
-              size: 24,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              brush.label,
-              style: GoogleFonts.nunito(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                color: isEraser ? Colors.grey.shade500 : color.withOpacity(0.9),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _brushIcon(BrushType brush) {
-    switch (brush) {
-      case BrushType.keceli:
-        return Icons.edit_rounded;
-      case BrushType.firca:
-        return Icons.brush_rounded;
-      case BrushType.pastel:
-        return Icons.colorize_rounded;
-      case BrushType.fosforlu:
-        return Icons.highlight_rounded;
-      case BrushType.sprey:
-        return Icons.water_drop_rounded;
-      case BrushType.silgi:
-        return Icons.auto_fix_normal_rounded;
-      default:
-        return Icons.circle;
-    }
-  }
-}
-
-class _SizeAndActions extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final provider = context.watch<PaintingProvider>();
-    final activeColor =
-        provider.isEraser ? Colors.grey.shade400 : provider.selectedColor;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
-      child: Row(
-        children: [
-          // Kalınlık önizlemesi
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: activeColor,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: activeColor.withOpacity(0.3),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
+            // Bitti butonu
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: onComplete,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6BCB77),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shadowColor: const Color(0xFF6BCB77).withOpacity(0.4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  icon: const Icon(Icons.check_circle_rounded, size: 24),
+                  label: Text(
+                    'Bitti!',
+                    style: GoogleFonts.nunito(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          // Slider
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: activeColor,
-                thumbColor: activeColor,
-                overlayColor: activeColor.withOpacity(0.15),
-                inactiveTrackColor: Colors.grey.shade200,
-                trackHeight: 5,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
-              ),
-              child: Slider(
-                value: provider.brushSize,
-                min: 4,
-                max: 40,
-                onChanged: provider.setBrushSize,
               ),
             ),
-          ),
-          // Aksiyon butonları
-          _ActionIcon(
-            icon: Icons.undo_rounded,
-            enabled: provider.canUndo,
-            onTap: provider.undo,
-          ),
-          const SizedBox(width: 6),
-          _ActionIcon(
-            icon: Icons.redo_rounded,
-            enabled: provider.canRedo,
-            onTap: provider.redo,
-          ),
-          const SizedBox(width: 6),
-          _ActionIcon(
-            icon: Icons.delete_outline_rounded,
-            enabled: provider.canUndo,
-            onTap: () => _confirmReset(context),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -720,9 +589,156 @@ class _SizeAndActions extends StatelessWidget {
       ),
     );
 
-    if (confirm == true && context.mounted) {
-      provider.reset();
-    }
+    if (confirm == true && context.mounted) provider.reset();
+  }
+}
+
+class _BrushDef {
+  final BrushType type;
+  final String label;
+  final IconData icon;
+  const _BrushDef(this.type, this.label, this.icon);
+}
+
+class _ColorBlob extends StatelessWidget {
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ColorBlob({
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isWhite = color == Colors.white;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutBack,
+        width: isSelected ? 52 : 44,
+        height: isSelected ? 52 : 44,
+        margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF3D3D5C)
+                : (isWhite ? const Color(0xFFE0E0E8) : Colors.white),
+            width: isSelected ? 3 : 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(isWhite ? 0.1 : 0.35),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: isSelected
+            ? Icon(Icons.check_rounded,
+                color: isWhite ? const Color(0xFF3D3D5C) : Colors.white,
+                size: 22)
+            : null,
+      ),
+    );
+  }
+}
+
+class _BrushButton extends StatelessWidget {
+  final _BrushDef def;
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _BrushButton({
+    required this.def,
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isEraser = def.type == BrushType.silgi;
+    final accent = isEraser ? Colors.grey.shade500 : color;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? accent.withOpacity(0.14) : const Color(0xFFF6F6FA),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected ? accent : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(def.icon, color: accent, size: 22),
+            const SizedBox(height: 2),
+            Text(
+              def.label,
+              style: GoogleFonts.nunito(
+                fontSize: 10,
+                fontWeight: FontWeight.w800,
+                color: accent,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SizeDot extends StatelessWidget {
+  final double diameter;
+  final String label;
+  final Color color;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _SizeDot({
+    required this.diameter,
+    required this.label,
+    required this.color,
+    required this.active,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: active ? color.withOpacity(0.14) : const Color(0xFFF6F6FA),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: active ? color : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Container(
+          width: diameter,
+          height: diameter,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+      ),
+    );
   }
 }
 
@@ -745,38 +761,14 @@ class _ActionIcon extends StatelessWidget {
         opacity: enabled ? 1.0 : 0.35,
         duration: const Duration(milliseconds: 200),
         child: Container(
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           decoration: BoxDecoration(
-            color: const Color(0xFFF4F4F6),
-            borderRadius: BorderRadius.circular(12),
+            color: const Color(0xFFF6F6FA),
+            borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(
-            icon,
-            color: const Color(0xFF5C5C7A),
-            size: 22,
-          ),
+          child: Icon(icon, color: const Color(0xFF5C5C7A), size: 22),
         ),
-      ),
-    );
-  }
-}
-
-class _CompleteButton extends StatelessWidget {
-  final VoidCallback onComplete;
-
-  const _CompleteButton({required this.onComplete});
-
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton.extended(
-      onPressed: onComplete,
-      backgroundColor: const Color(0xFF6BCB77),
-      foregroundColor: Colors.white,
-      icon: const Icon(Icons.check_rounded),
-      label: Text(
-        'Tamamla',
-        style: GoogleFonts.nunito(fontWeight: FontWeight.w800),
       ),
     );
   }

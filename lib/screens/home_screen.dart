@@ -15,8 +15,31 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final PageController _pageController = PageController(viewportFraction: 0.82);
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController.addListener(() {
+      final page = _pageController.page?.round() ?? 0;
+      if (page != _currentPage) setState(() => _currentPage = page);
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  List<DrawingCategory> get _activeCategories => DrawingCategory.values
+      .where((cat) => allDrawings.any((d) => d.category == cat))
+      .toList();
+
   @override
   Widget build(BuildContext context) {
+    final categories = _activeCategories;
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -31,11 +54,13 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildHeader(),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               _buildWelcomeText(),
-              const SizedBox(height: 16),
-              Expanded(child: _buildCategoryCarousel()),
               const SizedBox(height: 12),
+              Expanded(child: _buildCarousel(categories)),
+              const SizedBox(height: 8),
+              _buildDots(categories.length),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -56,9 +81,9 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(18),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x22FF6B6B),
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
+                  color: Color(0x22A78BFA),
+                  blurRadius: 12,
+                  offset: Offset(0, 5),
                 ),
               ],
             ),
@@ -71,9 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(width: 14),
-          Expanded(
-            child: _buildArvenlandTitle(),
-          ),
+          Expanded(child: _buildArvenlandTitle()),
         ],
       ),
     );
@@ -124,23 +147,50 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCategoryCarousel() {
-    // Aktif kategorileri çizim verisinden çıkar.
-    final activeCategories = DrawingCategory.values
-        .where((cat) => allDrawings.any((d) => d.category == cat))
-        .toList();
-
+  Widget _buildCarousel(List<DrawingCategory> categories) {
     return PageView.builder(
-      controller: PageController(viewportFraction: 0.78),
+      controller: _pageController,
       padEnds: true,
-      itemCount: activeCategories.length,
+      itemCount: categories.length,
       itemBuilder: (context, index) {
-        final category = activeCategories[index];
-        return _CategoryCard(
-          category: category,
-          onTap: () => _openCategory(category),
+        final category = categories[index];
+        return AnimatedBuilder(
+          animation: _pageController,
+          builder: (context, child) {
+            double delta = 0;
+            if (_pageController.position.haveDimensions) {
+              delta = (_pageController.page ?? 0) - index;
+            }
+            final scale = (1 - (delta.abs() * 0.08)).clamp(0.9, 1.0);
+            return Transform.scale(scale: scale, child: child);
+          },
+          child: _CategoryCard(
+            category: category,
+            onTap: () => _openCategory(category),
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildDots(int count) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(count, (i) {
+        final active = i == _currentPage;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          width: active ? 22 : 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: active
+                ? const Color(0xFF8B5CF6)
+                : const Color(0xFFD5D5E4),
+            borderRadius: BorderRadius.circular(6),
+          ),
+        );
+      }),
     );
   }
 
@@ -167,65 +217,53 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = CategoryIcon.bgOf(category);
     final accentColor = CategoryIcon.colorOf(category);
 
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
         decoration: BoxDecoration(
-          color: bgColor,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(32),
           boxShadow: [
             BoxShadow(
-              color: accentColor.withOpacity(0.25),
-              blurRadius: 18,
-              offset: const Offset(0, 10),
+              color: accentColor.withOpacity(0.18),
+              blurRadius: 24,
+              offset: const Offset(0, 12),
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
-          border: Border.all(
-            color: Colors.white.withOpacity(0.6),
-            width: 4,
-          ),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(
-                flex: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Image.asset(
-                    CategoryCover.pathOf(category),
-                    fit: BoxFit.contain,
-                  ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
+                child: Image.asset(
+                  CategoryCover.pathOf(category),
+                  fit: BoxFit.contain,
                 ),
               ),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.75),
-                  borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(28),
-                  ),
-                ),
-                child: Text(
-                  category.label,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.nunito(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: accentColor,
-                  ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+              child: Text(
+                category.label,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.nunito(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: accentColor,
+                  letterSpacing: 0.3,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
