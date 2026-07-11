@@ -217,53 +217,15 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accentColor = CategoryIcon.colorOf(category);
-
+    // Kategori adı zaten resmin içinde — kart, gölge veya alt etiket yok.
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: accentColor.withOpacity(0.18),
-              blurRadius: 24,
-              offset: const Offset(0, 12),
-            ),
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
-                child: Image.asset(
-                  CategoryCover.pathOf(category),
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-              child: Text(
-                category.label,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.nunito(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                  color: accentColor,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ),
-          ],
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
+        child: Image.asset(
+          CategoryCover.pathOf(category),
+          fit: BoxFit.contain,
         ),
       ),
     );

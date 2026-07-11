@@ -76,80 +76,28 @@ class _PaintingView extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFFAF6EE),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            _TopBar(drawing: drawing),
-            Expanded(
-              child: _PaintingCanvas(drawing: drawing, boundaryKey: canvasKey),
-            ),
-            _BottomToolPanel(onComplete: () => _complete(context)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Üst Bar ─────────────────────────────────────────────────────────────────
-
-class _TopBar extends StatelessWidget {
-  final Drawing drawing;
-  const _TopBar({required this.drawing});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 6),
-      child: Row(
-        children: [
-          _RoundIcon(
-            icon: Icons.arrow_back_ios_new_rounded,
-            onTap: () => Navigator.of(context).pop(),
-          ),
-          Expanded(
-            child: Center(
-              child: Text(
-                drawing.name,
-                style: GoogleFonts.nunito(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w900,
-                  color: AppTheme.textDark,
-                ),
+            // Ana çalışma alanı: sol tuval + sağ araç çubuğu
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _PaintingCanvas(
+                        drawing: drawing, boundaryKey: canvasKey),
+                  ),
+                  const SizedBox(width: 8),
+                  _VerticalArtToolbar(
+                    onComplete: () => _complete(context),
+                    onBack: () => Navigator.of(context).pop(),
+                    drawingName: drawing.name,
+                  ),
+                ],
               ),
             ),
-          ),
-          // Üst barın simetrisi için sağda boşluk
-          const SizedBox(width: 44),
-        ],
-      ),
-    );
-  }
-}
-
-class _RoundIcon extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  const _RoundIcon({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
           ],
         ),
-        child: Icon(icon, size: 20, color: const Color(0xFF6B6B8A)),
       ),
     );
   }
@@ -166,55 +114,54 @@ class _PaintingCanvas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PaintingProvider>();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 6, 14, 12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
-          child: LayoutBuilder(builder: (context, constraints) {
-            final available = constraints.maxWidth / constraints.maxHeight;
-            final aspect = available.clamp(0.72, 1.4);
-            return Center(
-              child: AspectRatio(
-                aspectRatio: aspect,
-                child: RepaintBoundary(
-                  key: boundaryKey,
-                  child: GestureDetector(
-                    onPanStart: (d) => provider.startStroke(d.localPosition),
-                    onPanUpdate: (d) => provider.continueStroke(d.localPosition),
-                    onPanEnd: (_) => provider.endStroke(),
-                    child: Container(
-                      color: Colors.white,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          DrawingImage(source: drawing.svgData, fit: BoxFit.fill),
-                          CustomPaint(
-                            painter: _StrokePainter(
-                              strokes: provider.strokes,
-                              currentStroke: provider.currentStroke,
-                            ),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: LayoutBuilder(builder: (context, constraints) {
+          final available = constraints.maxWidth / constraints.maxHeight;
+          final aspect = available.clamp(0.7, 1.6);
+          return Center(
+            child: AspectRatio(
+              aspectRatio: aspect,
+              child: RepaintBoundary(
+                key: boundaryKey,
+                child: GestureDetector(
+                  onPanStart: (d) => provider.startStroke(d.localPosition),
+                  onPanUpdate: (d) =>
+                      provider.continueStroke(d.localPosition),
+                  onPanEnd: (_) => provider.endStroke(),
+                  child: Container(
+                    color: Colors.white,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        DrawingImage(
+                            source: drawing.svgData, fit: BoxFit.fill),
+                        CustomPaint(
+                          painter: _StrokePainter(
+                            strokes: provider.strokes,
+                            currentStroke: provider.currentStroke,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
-            );
-          }),
-        ),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -359,200 +306,110 @@ class _StrokePainter extends CustomPainter {
       old.strokes != strokes || old.currentStroke != currentStroke;
 }
 
-// ── Alt Araç Paneli ─────────────────────────────────────────────────────────
+// ── Sağ dikey araç çubuğu ───────────────────────────────────────────────────
 
-class _BottomToolPanel extends StatelessWidget {
+class _VerticalArtToolbar extends StatelessWidget {
   final VoidCallback onComplete;
-  const _BottomToolPanel({required this.onComplete});
+  final VoidCallback onBack;
+  final String drawingName;
 
-  // Zenginleştirilmiş çocuk paleti — gruplandırılmış tonlar.
-  static const List<Color> _palette = [
-    // Kırmızı & pembe
-    Color(0xFFFF5A5A), Color(0xFFFF7A9C), Color(0xFFF472B6), Color(0xFFFFB3B3),
-    // Turuncu & sarı
-    Color(0xFFFF8C42), Color(0xFFFFA94D), Color(0xFFFFD166), Color(0xFFFFEB99),
-    // Yeşiller
-    Color(0xFF6BCB77), Color(0xFF2EC4B6), Color(0xFFA8E6CF), Color(0xFF9DE38A),
-    // Maviler
-    Color(0xFF74B9FF), Color(0xFF4D96FF), Color(0xFF60D0E4), Color(0xFFB5DEFF),
-    // Morlar
-    Color(0xFFA78BFA), Color(0xFFC084FC), Color(0xFFD8B4FE), Color(0xFFE9D5FF),
-    // Kahve & ten
-    Color(0xFF8B5E3C), Color(0xFFC4956A), Color(0xFFE0AC69), Color(0xFFF5CBA7),
-    // Nötr
-    Color(0xFF3D3D5C), Color(0xFF6B6B8A), Color(0xFFB8B8C8), Color(0xFFFFFFFF),
+  const _VerticalArtToolbar({
+    required this.onComplete,
+    required this.onBack,
+    required this.drawingName,
+  });
+
+  static const _tools = <_ToolDef>[
+    _ToolDef(BrushType.keceli, 'Keçeli', _ArtToolKind.marker),
+    _ToolDef(BrushType.firca, 'Fırça', _ArtToolKind.brush),
+    _ToolDef(BrushType.pastel, 'Pastel', _ArtToolKind.crayon),
+    _ToolDef(BrushType.kursun, 'Kurşun', _ArtToolKind.pencil),
+    _ToolDef(BrushType.fosforlu, 'Fosforlu', _ArtToolKind.highlighter),
+    _ToolDef(BrushType.sprey, 'Sprey', _ArtToolKind.spray),
+    _ToolDef(BrushType.silgi, 'Silgi', _ArtToolKind.eraser),
   ];
-
-  static const _brushes = <_BrushDef>[
-    _BrushDef(BrushType.keceli, 'Keçeli', Icons.edit_rounded),
-    _BrushDef(BrushType.firca, 'Fırça', Icons.brush_rounded),
-    _BrushDef(BrushType.pastel, 'Pastel', Icons.colorize_rounded),
-    _BrushDef(BrushType.kursun, 'Kurşun', Icons.create_rounded),
-    _BrushDef(BrushType.fosforlu, 'Fosforlu', Icons.highlight_rounded),
-    _BrushDef(BrushType.sprey, 'Sprey', Icons.water_drop_rounded),
-    _BrushDef(BrushType.silgi, 'Silgi', Icons.auto_fix_normal_rounded),
-  ];
-
-  static const _sizes = <double>[6, 12, 20, 32];
-  static const _sizeLabels = <String>['S', 'M', 'L', 'XL'];
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PaintingProvider>();
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 24,
-            offset: const Offset(0, -6),
+    return SizedBox(
+      width: 88,
+      child: Column(
+        children: [
+          // Üst: geri + başlık chip
+          _MiniIconButton(
+            icon: Icons.arrow_back_ios_new_rounded,
+            onTap: onBack,
           ),
+          const SizedBox(height: 12),
+          // Renk seçici
+          _CircularColorButton(
+            color: provider.selectedColor,
+            onTap: () => _openColorPicker(context, provider),
+          ),
+          const SizedBox(height: 12),
+          // Araçlar — kaydırılabilir dikey liste
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  for (final t in _tools)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: _ArtToolChip(
+                        def: t,
+                        color: provider.selectedColor,
+                        selected: provider.selectedBrush == t.type,
+                        onTap: () => provider.setBrush(t.type),
+                        onLongPress: () =>
+                            _openBrushSizePopover(context, provider),
+                      ),
+                    ),
+                  const SizedBox(height: 4),
+                  // Kalınlık butonu
+                  _MiniIconButton(
+                    icon: Icons.tune_rounded,
+                    tooltip: 'Kalınlık',
+                    onTap: () => _openBrushSizePopover(context, provider),
+                    child: _BrushSizeDot(
+                      color: provider.isEraser
+                          ? Colors.grey.shade500
+                          : provider.selectedColor,
+                      size: provider.brushSize,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  _MiniIconButton(
+                    icon: Icons.undo_rounded,
+                    enabled: provider.canUndo,
+                    onTap: provider.undo,
+                  ),
+                  const SizedBox(height: 6),
+                  _MiniIconButton(
+                    icon: Icons.redo_rounded,
+                    enabled: provider.canRedo,
+                    onTap: provider.redo,
+                  ),
+                  const SizedBox(height: 6),
+                  _MiniIconButton(
+                    icon: Icons.delete_outline_rounded,
+                    enabled: provider.canUndo,
+                    onTap: () => _confirmReset(context, provider),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _CompactDoneButton(onTap: onComplete),
         ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 10),
-            // Renk paleti
-            SizedBox(
-              height: 60,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                itemCount: _palette.length,
-                itemBuilder: (context, index) {
-                  final color = _palette[index];
-                  final isSelected = provider.selectedColor == color;
-                  return _ColorBlob(
-                    color: color,
-                    isSelected: isSelected,
-                    onTap: () => provider.setColor(color),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 6),
-            // Fırça araçları
-            SizedBox(
-              height: 68,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: _brushes.length,
-                itemBuilder: (context, index) {
-                  final brush = _brushes[index];
-                  final isSelected = provider.selectedBrush == brush.type;
-                  return _BrushButton(
-                    def: brush,
-                    color: provider.selectedColor,
-                    isSelected: isSelected,
-                    onTap: () => provider.setBrush(brush.type),
-                  );
-                },
-              ),
-            ),
-            // Kalınlık + aksiyonlar — dar ekranda taşmasın diye kaydırılabilir
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 6, 14, 10),
-              child: LayoutBuilder(builder: (context, constraints) {
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: ConstrainedBox(
-                    constraints:
-                        BoxConstraints(minWidth: constraints.maxWidth),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: List.generate(_sizes.length, (i) {
-                            final size = _sizes[i];
-                            final active =
-                                (provider.brushSize - size).abs() < 0.5;
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: _SizeDot(
-                                diameter: 14.0 + i * 6,
-                                label: _sizeLabels[i],
-                                color: provider.isEraser
-                                    ? Colors.grey.shade500
-                                    : provider.selectedColor,
-                                active: active,
-                                onTap: () => provider.setBrushSize(size),
-                              ),
-                            );
-                          }),
-                        ),
-                        const SizedBox(width: 12),
-                        Row(
-                          children: [
-                            _ActionIcon(
-                              icon: Icons.undo_rounded,
-                              enabled: provider.canUndo,
-                              onTap: provider.undo,
-                            ),
-                            const SizedBox(width: 6),
-                            _ActionIcon(
-                              icon: Icons.redo_rounded,
-                              enabled: provider.canRedo,
-                              onTap: provider.redo,
-                            ),
-                            const SizedBox(width: 6),
-                            _ActionIcon(
-                              icon: Icons.delete_outline_rounded,
-                              enabled: provider.canUndo,
-                              onTap: () => _confirmReset(context),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ),
-            // Bitti butonu
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton.icon(
-                  onPressed: onComplete,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF6BCB77),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shadowColor: const Color(0xFF6BCB77).withOpacity(0.4),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  icon: const Icon(Icons.check_circle_rounded, size: 24),
-                  label: Text(
-                    'Bitti!',
-                    style: GoogleFonts.nunito(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  Future<void> _confirmReset(BuildContext context) async {
-    final provider = context.read<PaintingProvider>();
+  Future<void> _confirmReset(
+      BuildContext context, PaintingProvider provider) async {
     if (!provider.canUndo) return;
-
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -585,186 +442,846 @@ class _BottomToolPanel extends StatelessWidget {
         ],
       ),
     );
+    if (confirm == true) provider.reset();
+  }
 
-    if (confirm == true && context.mounted) provider.reset();
+  void _openColorPicker(BuildContext context, PaintingProvider provider) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _ColorPickerPanel(
+        selected: provider.selectedColor,
+        onSelected: (c) {
+          provider.setColor(c);
+        },
+      ),
+    );
+  }
+
+  void _openBrushSizePopover(
+      BuildContext context, PaintingProvider provider) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _BrushSizePanel(
+        color: provider.isEraser
+            ? Colors.grey.shade500
+            : provider.selectedColor,
+        value: provider.brushSize,
+        onChanged: (v) => provider.setBrushSize(v),
+      ),
+    );
   }
 }
 
-class _BrushDef {
+// ── Yardımcı Widget'lar ─────────────────────────────────────────────────────
+
+class _ToolDef {
   final BrushType type;
   final String label;
-  final IconData icon;
-  const _BrushDef(this.type, this.label, this.icon);
+  final _ArtToolKind kind;
+  const _ToolDef(this.type, this.label, this.kind);
 }
 
-class _ColorBlob extends StatelessWidget {
-  final Color color;
-  final bool isSelected;
-  final VoidCallback onTap;
+enum _ArtToolKind { pencil, crayon, marker, brush, highlighter, spray, eraser }
 
-  const _ColorBlob({
-    required this.color,
-    required this.isSelected,
+class _MiniIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool enabled;
+  final String? tooltip;
+  final Widget? child;
+  const _MiniIconButton({
+    required this.icon,
     required this.onTap,
+    this.enabled = true,
+    this.tooltip,
+    this.child,
   });
+
+  @override
+  Widget build(BuildContext context) {
+    final btn = GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: AnimatedOpacity(
+        opacity: enabled ? 1 : 0.35,
+        duration: const Duration(milliseconds: 180),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: child ??
+              Icon(icon, size: 20, color: const Color(0xFF5C5C7A)),
+        ),
+      ),
+    );
+    return tooltip != null ? Tooltip(message: tooltip!, child: btn) : btn;
+  }
+}
+
+class _CircularColorButton extends StatelessWidget {
+  final Color color;
+  final VoidCallback onTap;
+  const _CircularColorButton({required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final isWhite = color == Colors.white;
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOutBack,
-        width: isSelected ? 52 : 44,
-        height: isSelected ? 52 : 44,
-        margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+      child: Container(
+        width: 62,
+        height: 62,
         decoration: BoxDecoration(
-          color: color,
+          color: Colors.white,
           shape: BoxShape.circle,
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF3D3D5C)
-                : (isWhite ? const Color(0xFFE0E0E8) : Colors.white),
-            width: isSelected ? 3 : 2,
-          ),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(isWhite ? 0.1 : 0.35),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: color.withOpacity(isWhite ? 0.1 : 0.45),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
-        child: isSelected
-            ? Icon(Icons.check_rounded,
-                color: isWhite ? const Color(0xFF3D3D5C) : Colors.white,
-                size: 22)
-            : null,
+        alignment: Alignment.center,
+        child: Container(
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isWhite ? const Color(0xFFE0E0E8) : Colors.white,
+              width: 3,
+            ),
+          ),
+          child: Align(
+            alignment: Alignment.bottomRight,
+            child: Container(
+              margin: const EdgeInsets.all(2),
+              width: 16,
+              height: 16,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                      color: Color(0x22000000),
+                      blurRadius: 3,
+                      offset: Offset(0, 1)),
+                ],
+              ),
+              child: const Icon(Icons.palette_rounded,
+                  size: 11, color: Color(0xFF5C5C7A)),
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
-class _BrushButton extends StatelessWidget {
-  final _BrushDef def;
+class _ArtToolChip extends StatelessWidget {
+  final _ToolDef def;
   final Color color;
-  final bool isSelected;
+  final bool selected;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
-  const _BrushButton({
+  const _ArtToolChip({
     required this.def,
     required this.color,
-    required this.isSelected,
+    required this.selected,
     required this.onTap,
+    required this.onLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isEraser = def.type == BrushType.silgi;
-    final accent = isEraser ? Colors.grey.shade500 : color;
+    final accent = def.kind == _ArtToolKind.eraser ? Colors.grey.shade500 : color;
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        curve: Curves.easeOutBack,
+        width: 68,
+        height: 62,
         decoration: BoxDecoration(
-          color: isSelected ? accent.withOpacity(0.14) : const Color(0xFFF6F6FA),
+          color: selected ? accent.withOpacity(0.14) : Colors.transparent,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isSelected ? accent : Colors.transparent,
-            width: 2,
-          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(def.icon, color: accent, size: 22),
-            const SizedBox(height: 2),
-            Text(
-              def.label,
-              style: GoogleFonts.nunito(
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: accent,
-              ),
+        alignment: Alignment.center,
+        child: Transform.rotate(
+          angle: selected ? -0.15 : -0.35,
+          child: SizedBox(
+            width: 54,
+            height: 54,
+            child: CustomPaint(
+              painter: _ArtToolPainter(kind: def.kind, color: accent),
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _SizeDot extends StatelessWidget {
-  final double diameter;
-  final String label;
+class _ArtToolPainter extends CustomPainter {
+  final _ArtToolKind kind;
   final Color color;
-  final bool active;
-  final VoidCallback onTap;
+  _ArtToolPainter({required this.kind, required this.color});
 
-  const _SizeDot({
-    required this.diameter,
-    required this.label,
-    required this.color,
-    required this.active,
-    required this.onTap,
-  });
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final shaft = Paint()..color = color;
+    final dark = Paint()..color = const Color(0xFF3D3D5C);
+    final wood = Paint()..color = const Color(0xFFF5CBA7);
+    final tip = Paint()..color = const Color(0xFF3D3D5C);
+
+    switch (kind) {
+      case _ArtToolKind.pencil:
+        // Uzun ince kurşun kalem
+        final body = RRect.fromRectAndRadius(
+            Rect.fromLTWH(w * 0.30, h * 0.15, w * 0.20, h * 0.55),
+            const Radius.circular(4));
+        canvas.drawRRect(body, shaft);
+        // ahşap uç
+        final tri = Path()
+          ..moveTo(w * 0.30, h * 0.70)
+          ..lineTo(w * 0.50, h * 0.70)
+          ..lineTo(w * 0.40, h * 0.90)
+          ..close();
+        canvas.drawPath(tri, wood);
+        // grafit uç
+        final tip2 = Path()
+          ..moveTo(w * 0.37, h * 0.83)
+          ..lineTo(w * 0.43, h * 0.83)
+          ..lineTo(w * 0.40, h * 0.92)
+          ..close();
+        canvas.drawPath(tip2, tip);
+        // silgi
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+              Rect.fromLTWH(w * 0.30, h * 0.08, w * 0.20, h * 0.10),
+              const Radius.circular(3)),
+          Paint()..color = const Color(0xFFFFB3B3),
+        );
+        break;
+      case _ArtToolKind.crayon:
+        // Kalın pastel — yuvarlak kağıt sargı
+        final body = RRect.fromRectAndRadius(
+            Rect.fromLTWH(w * 0.26, h * 0.20, w * 0.28, h * 0.55),
+            const Radius.circular(8));
+        canvas.drawRRect(body, shaft);
+        // sargı bantları
+        canvas.drawRect(
+            Rect.fromLTWH(w * 0.26, h * 0.30, w * 0.28, h * 0.04),
+            Paint()..color = Colors.white.withOpacity(0.7));
+        canvas.drawRect(
+            Rect.fromLTWH(w * 0.26, h * 0.60, w * 0.28, h * 0.04),
+            Paint()..color = Colors.white.withOpacity(0.7));
+        // konik uç
+        final tri = Path()
+          ..moveTo(w * 0.26, h * 0.75)
+          ..lineTo(w * 0.54, h * 0.75)
+          ..lineTo(w * 0.40, h * 0.95)
+          ..close();
+        canvas.drawPath(tri, shaft);
+        break;
+      case _ArtToolKind.marker:
+        // Keçeli kalem
+        final body = RRect.fromRectAndRadius(
+            Rect.fromLTWH(w * 0.28, h * 0.20, w * 0.24, h * 0.50),
+            const Radius.circular(6));
+        canvas.drawRRect(body, shaft);
+        // kapak halka
+        canvas.drawRect(
+            Rect.fromLTWH(w * 0.28, h * 0.68, w * 0.24, h * 0.04), dark);
+        // konik uç
+        final tri = Path()
+          ..moveTo(w * 0.30, h * 0.72)
+          ..lineTo(w * 0.50, h * 0.72)
+          ..lineTo(w * 0.40, h * 0.93)
+          ..close();
+        canvas.drawPath(tri, dark);
+        break;
+      case _ArtToolKind.brush:
+        // Fırça — sap + metal bilezik + kıllar
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+              Rect.fromLTWH(w * 0.32, h * 0.05, w * 0.16, h * 0.50),
+              const Radius.circular(6)),
+          Paint()..color = const Color(0xFFC4956A),
+        );
+        canvas.drawRect(
+            Rect.fromLTWH(w * 0.30, h * 0.52, w * 0.20, h * 0.08),
+            Paint()..color = const Color(0xFFB8B8C8));
+        // kıllar — damla şekli
+        final bristle = Path()
+          ..moveTo(w * 0.30, h * 0.60)
+          ..lineTo(w * 0.50, h * 0.60)
+          ..quadraticBezierTo(w * 0.55, h * 0.80, w * 0.40, h * 0.96)
+          ..quadraticBezierTo(w * 0.25, h * 0.80, w * 0.30, h * 0.60)
+          ..close();
+        canvas.drawPath(bristle, shaft);
+        break;
+      case _ArtToolKind.highlighter:
+        // Fosforlu — geniş şişkin gövde, eğik uç
+        final body = RRect.fromRectAndRadius(
+            Rect.fromLTWH(w * 0.22, h * 0.20, w * 0.36, h * 0.50),
+            const Radius.circular(10));
+        canvas.drawRRect(body, shaft);
+        // eğik uç
+        final tri = Path()
+          ..moveTo(w * 0.22, h * 0.70)
+          ..lineTo(w * 0.58, h * 0.70)
+          ..lineTo(w * 0.52, h * 0.92)
+          ..lineTo(w * 0.28, h * 0.92)
+          ..close();
+        canvas.drawPath(tri, Paint()..color = color.withOpacity(0.85));
+        break;
+      case _ArtToolKind.spray:
+        // Sprey şişe
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+              Rect.fromLTWH(w * 0.28, h * 0.30, w * 0.28, h * 0.50),
+              const Radius.circular(8)),
+          shaft,
+        );
+        // nozul / kapak
+        canvas.drawRect(
+            Rect.fromLTWH(w * 0.34, h * 0.18, w * 0.16, h * 0.14), dark);
+        canvas.drawRect(
+            Rect.fromLTWH(w * 0.50, h * 0.22, w * 0.10, h * 0.06), dark);
+        // sprey noktaları
+        for (final p in [
+          Offset(w * 0.72, h * 0.20),
+          Offset(w * 0.80, h * 0.28),
+          Offset(w * 0.75, h * 0.34),
+          Offset(w * 0.68, h * 0.30),
+        ]) {
+          canvas.drawCircle(p, 1.6, Paint()..color = color);
+        }
+        break;
+      case _ArtToolKind.eraser:
+        // Silgi — pembe/mavi iki tonlu blok
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+              Rect.fromLTWH(w * 0.18, h * 0.32, w * 0.55, h * 0.35),
+              const Radius.circular(8)),
+          Paint()..color = const Color(0xFFFFB3B3),
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+              Rect.fromLTWH(w * 0.18, h * 0.32, w * 0.55, h * 0.12),
+              const Radius.circular(8)),
+          Paint()..color = const Color(0xFF74B9FF),
+        );
+        break;
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ArtToolPainter old) =>
+      old.kind != kind || old.color != color;
+}
+
+class _BrushSizeDot extends StatelessWidget {
+  final Color color;
+  final double size;
+  const _BrushSizeDot({required this.color, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    // 6..40 aralığını 6..22 pixel'e eşle
+    final d = (6 + (size / 40).clamp(0, 1) * 16).toDouble();
+    return Container(
+      width: d,
+      height: d,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}
+
+class _CompactDoneButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _CompactDoneButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 44,
-        height: 44,
+        width: 64,
+        height: 64,
         decoration: BoxDecoration(
-          color: active ? color.withOpacity(0.14) : const Color(0xFFF6F6FA),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: active ? color : Colors.transparent,
-            width: 2,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF6BCB77), Color(0xFF2EC4B6)],
           ),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF6BCB77).withOpacity(0.45),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-        alignment: Alignment.center,
-        child: Container(
-          width: diameter,
-          height: diameter,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        child: Stack(
+          alignment: Alignment.center,
+          children: const [
+            Icon(Icons.check_rounded, color: Colors.white, size: 34),
+            Positioned(
+              top: 8,
+              right: 10,
+              child: Icon(Icons.auto_awesome,
+                  color: Color(0xFFFFF3B0), size: 14),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _ActionIcon extends StatelessWidget {
-  final IconData icon;
-  final bool enabled;
-  final VoidCallback onTap;
+// ── Renk Seçici Panel ───────────────────────────────────────────────────────
 
-  const _ActionIcon({
-    required this.icon,
-    required this.enabled,
-    required this.onTap,
-  });
+class _ColorPickerPanel extends StatefulWidget {
+  final Color selected;
+  final ValueChanged<Color> onSelected;
+  const _ColorPickerPanel({required this.selected, required this.onSelected});
+
+  @override
+  State<_ColorPickerPanel> createState() => _ColorPickerPanelState();
+}
+
+class _ColorPickerPanelState extends State<_ColorPickerPanel> {
+  int _mode = 0; // 0: grid, 1: spectrum
+  late Color _current = widget.selected;
+
+  static const List<Color> _grid = [
+    Color(0xFFFF5A5A), Color(0xFFFF8C42), Color(0xFFFFD166), Color(0xFFB6E33B),
+    Color(0xFF6BCB77), Color(0xFF2EC4B6), Color(0xFF60D0E4), Color(0xFF74B9FF),
+    Color(0xFF4D96FF), Color(0xFF1E3A8A), Color(0xFFA78BFA), Color(0xFFC084FC),
+    Color(0xFFF472B6), Color(0xFFFF7A9C), Color(0xFF8B5E3C), Color(0xFFF5CBA7),
+    Color(0xFFFFB3B3), Color(0xFF94A3B8), Color(0xFF3D3D5C), Color(0xFFFFFFFF),
+  ];
 
   @override
   Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 44,
+              height: 5,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE0E0E8),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+            const SizedBox(height: 14),
+            // Mod anahtarı
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F3F8),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _modeTab('Renkler', 0),
+                  _modeTab('Spektrum', 1),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            if (_mode == 0)
+              _buildGrid()
+            else
+              _buildSpectrum(),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _modeTab(String label, int index) {
+    final active = _mode == index;
     return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: AnimatedOpacity(
-        opacity: enabled ? 1.0 : 0.35,
-        duration: const Duration(milliseconds: 200),
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: const Color(0xFFF6F6FA),
-            borderRadius: BorderRadius.circular(14),
+      onTap: () => setState(() => _mode = index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: active
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.nunito(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: active
+                ? AppTheme.textDark
+                : const Color(0xFF8B8BA5),
           ),
-          child: Icon(icon, color: const Color(0xFF5C5C7A), size: 22),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGrid() {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        for (final c in _grid)
+          GestureDetector(
+            onTap: () {
+              setState(() => _current = c);
+              widget.onSelected(c);
+              Navigator.pop(context);
+            },
+            child: _swatch(c, _current == c),
+          ),
+      ],
+    );
+  }
+
+  Widget _swatch(Color c, bool selected) {
+    final isWhite = c == Colors.white;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutBack,
+      width: selected ? 52 : 44,
+      height: selected ? 52 : 44,
+      decoration: BoxDecoration(
+        color: c,
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: selected
+              ? const Color(0xFF3D3D5C)
+              : (isWhite ? const Color(0xFFE0E0E8) : Colors.white),
+          width: selected ? 3 : 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: c.withOpacity(isWhite ? 0.1 : 0.35),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: selected
+          ? Icon(Icons.check_rounded,
+              size: 22,
+              color: isWhite ? const Color(0xFF3D3D5C) : Colors.white)
+          : null,
+    );
+  }
+
+  Widget _buildSpectrum() {
+    return Column(
+      children: [
+        _SpectrumBar(
+          current: _current,
+          onChanged: (c) {
+            setState(() => _current = c);
+            widget.onSelected(c);
+          },
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: _current,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: _current.withOpacity(0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 14),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.textDark,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 22, vertical: 12),
+              ),
+              child: Text('Tamam',
+                  style: GoogleFonts.nunito(fontWeight: FontWeight.w800)),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _SpectrumBar extends StatefulWidget {
+  final Color current;
+  final ValueChanged<Color> onChanged;
+  const _SpectrumBar({required this.current, required this.onChanged});
+
+  @override
+  State<_SpectrumBar> createState() => _SpectrumBarState();
+}
+
+class _SpectrumBarState extends State<_SpectrumBar> {
+  double _hue = 0;
+  double _lightness = 0.5;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Ton (hue) barı
+        _buildBar(
+          gradient: const LinearGradient(colors: [
+            Color(0xFFFF0000),
+            Color(0xFFFFFF00),
+            Color(0xFF00FF00),
+            Color(0xFF00FFFF),
+            Color(0xFF0000FF),
+            Color(0xFFFF00FF),
+            Color(0xFFFF0000),
+          ]),
+          value: _hue / 360,
+          onChanged: (v) {
+            setState(() => _hue = v * 360);
+            _emit();
+          },
+        ),
+        const SizedBox(height: 14),
+        // Açıklık barı
+        _buildBar(
+          gradient: LinearGradient(colors: [
+            Colors.black,
+            HSLColor.fromAHSL(1, _hue, 1, 0.5).toColor(),
+            Colors.white,
+          ]),
+          value: _lightness,
+          onChanged: (v) {
+            setState(() => _lightness = v);
+            _emit();
+          },
+        ),
+      ],
+    );
+  }
+
+  void _emit() {
+    final c = HSLColor.fromAHSL(1, _hue, 1, _lightness.clamp(0.05, 0.95))
+        .toColor();
+    widget.onChanged(c);
+  }
+
+  Widget _buildBar({
+    required Gradient gradient,
+    required double value,
+    required ValueChanged<double> onChanged,
+  }) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final w = constraints.maxWidth;
+      return GestureDetector(
+        onPanDown: (d) => onChanged((d.localPosition.dx / w).clamp(0, 1)),
+        onPanUpdate: (d) => onChanged((d.localPosition.dx / w).clamp(0, 1)),
+        child: SizedBox(
+          height: 28,
+          child: Stack(
+            alignment: Alignment.centerLeft,
+            children: [
+              Container(
+                height: 18,
+                decoration: BoxDecoration(
+                  gradient: gradient,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                left: (value.clamp(0, 1) * w) - 12,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border:
+                        Border.all(color: const Color(0xFF3D3D5C), width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.18),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+}
+
+// ── Fırça Kalınlığı Panel ───────────────────────────────────────────────────
+
+class _BrushSizePanel extends StatefulWidget {
+  final Color color;
+  final double value;
+  final ValueChanged<double> onChanged;
+  const _BrushSizePanel({
+    required this.color,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  State<_BrushSizePanel> createState() => _BrushSizePanelState();
+}
+
+class _BrushSizePanelState extends State<_BrushSizePanel> {
+  late double _value = widget.value.clamp(2, 40).toDouble();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 44,
+              height: 5,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE0E0E8),
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('Kalınlık',
+                style: GoogleFonts.nunito(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.textDark)),
+            const SizedBox(height: 20),
+            // canlı önizleme
+            SizedBox(
+              height: 56,
+              child: Center(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 90),
+                  width: _value * 1.2 + 4,
+                  height: _value * 1.2 + 4,
+                  decoration:
+                      BoxDecoration(color: widget.color, shape: BoxShape.circle),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                      color: widget.color, shape: BoxShape.circle),
+                ),
+                Expanded(
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: widget.color,
+                      inactiveTrackColor: widget.color.withOpacity(0.2),
+                      thumbColor: widget.color,
+                      overlayColor: widget.color.withOpacity(0.15),
+                      trackHeight: 6,
+                    ),
+                    child: Slider(
+                      min: 2,
+                      max: 40,
+                      value: _value,
+                      onChanged: (v) {
+                        setState(() => _value = v);
+                        widget.onChanged(v);
+                      },
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                      color: widget.color, shape: BoxShape.circle),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
