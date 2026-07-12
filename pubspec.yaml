@@ -34,6 +34,8 @@ flutter:
   assets:
     # Yeni kategori kapak resimleri
     - assets/categories/
+    # Çizimli araç görselleri
+    - assets/tools/
 
     # Mevcut boyama çizimleri
     - assets/coloring/letters/

@@ -339,13 +339,18 @@ class _VerticalArtToolbar extends StatelessWidget {
           // Üst: geri + başlık chip
           _MiniIconButton(
             icon: Icons.arrow_back_ios_new_rounded,
+            tooltip: 'Geri',
             onTap: onBack,
           ),
           const SizedBox(height: 12),
           // Renk seçici
-          _CircularColorButton(
-            color: provider.selectedColor,
-            onTap: () => _openColorPicker(context, provider),
+          Tooltip(
+            message: 'Renkler',
+            waitDuration: const Duration(milliseconds: 150),
+            child: _CircularColorButton(
+              color: provider.selectedColor,
+              onTap: () => _openColorPicker(context, provider),
+            ),
           ),
           const SizedBox(height: 12),
           // Araçlar — kaydırılabilir dikey liste
@@ -369,9 +374,9 @@ class _VerticalArtToolbar extends StatelessWidget {
                   // Kalınlık butonu
                   _MiniIconButton(
                     icon: Icons.tune_rounded,
-                    tooltip: 'Kalınlık',
+                    tooltip: 'Fırça Boyutu',
                     onTap: () => _openBrushSizePopover(context, provider),
-                    child: _BrushSizeDot(
+                    child: _BrushSizeIcon(
                       color: provider.isEraser
                           ? Colors.grey.shade500
                           : provider.selectedColor,
@@ -381,18 +386,21 @@ class _VerticalArtToolbar extends StatelessWidget {
                   const SizedBox(height: 6),
                   _MiniIconButton(
                     icon: Icons.undo_rounded,
+                    tooltip: 'Geri Al',
                     enabled: provider.canUndo,
                     onTap: provider.undo,
                   ),
                   const SizedBox(height: 6),
                   _MiniIconButton(
                     icon: Icons.redo_rounded,
+                    tooltip: 'Yinele',
                     enabled: provider.canRedo,
                     onTap: provider.redo,
                   ),
                   const SizedBox(height: 6),
                   _MiniIconButton(
                     icon: Icons.delete_outline_rounded,
+                    tooltip: 'Temizle',
                     enabled: provider.canUndo,
                     onTap: () => _confirmReset(context, provider),
                   ),
@@ -570,8 +578,8 @@ class _CircularColorButton extends StatelessWidget {
             alignment: Alignment.bottomRight,
             child: Container(
               margin: const EdgeInsets.all(2),
-              width: 16,
-              height: 16,
+              width: 20,
+              height: 20,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
@@ -582,14 +590,45 @@ class _CircularColorButton extends StatelessWidget {
                       offset: Offset(0, 1)),
                 ],
               ),
-              child: const Icon(Icons.palette_rounded,
-                  size: 11, color: Color(0xFF5C5C7A)),
+              child: CustomPaint(painter: _ColorfulPaletteIconPainter()),
             ),
           ),
         ),
       ),
     );
   }
+}
+
+class _ColorfulPaletteIconPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final r = size.width * 0.42;
+    // Palet gövdesi
+    final palette = Path()
+      ..addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r));
+    // baş parmak deliği
+    palette.fillType = PathFillType.evenOdd;
+    palette.addOval(Rect.fromCircle(
+        center: Offset(cx + r * 0.45, cy + r * 0.15), radius: r * 0.22));
+    canvas.drawPath(
+        palette, Paint()..color = const Color(0xFFF5CBA7));
+    // renk noktaları
+    final dots = <Color, Offset>{
+      const Color(0xFFFF5A5A): Offset(cx - r * 0.45, cy - r * 0.30),
+      const Color(0xFFFFD166): Offset(cx - r * 0.05, cy - r * 0.55),
+      const Color(0xFF6BCB77): Offset(cx + r * 0.35, cy - r * 0.30),
+      const Color(0xFF4D96FF): Offset(cx - r * 0.50, cy + r * 0.25),
+      const Color(0xFFA78BFA): Offset(cx - r * 0.05, cy + r * 0.10),
+    };
+    dots.forEach((color, pos) {
+      canvas.drawCircle(pos, r * 0.18, Paint()..color = color);
+    });
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _ArtToolChip extends StatelessWidget {
@@ -610,31 +649,57 @@ class _ArtToolChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = def.kind == _ArtToolKind.eraser ? Colors.grey.shade500 : color;
-    return GestureDetector(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOutBack,
-        width: 68,
-        height: 62,
-        decoration: BoxDecoration(
-          color: selected ? accent.withOpacity(0.14) : Colors.transparent,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        alignment: Alignment.center,
-        child: Transform.rotate(
-          angle: selected ? -0.15 : -0.35,
-          child: SizedBox(
-            width: 54,
-            height: 54,
-            child: CustomPaint(
-              painter: _ArtToolPainter(kind: def.kind, color: accent),
+    return Tooltip(
+      message: def.label,
+      waitDuration: const Duration(milliseconds: 150),
+      child: GestureDetector(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutBack,
+          width: 68,
+          height: 64,
+          decoration: BoxDecoration(
+            color: selected ? accent.withOpacity(0.14) : Colors.transparent,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          alignment: Alignment.center,
+          child: AnimatedScale(
+            scale: selected ? 1.08 : 1.0,
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutBack,
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Image.asset(
+                _assetFor(def.kind),
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+              ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  static String _assetFor(_ArtToolKind kind) {
+    switch (kind) {
+      case _ArtToolKind.pencil:
+        return 'assets/tools/tool_pencil.png';
+      case _ArtToolKind.crayon:
+        return 'assets/tools/tool_crayon.png';
+      case _ArtToolKind.marker:
+        return 'assets/tools/tool_marker.png';
+      case _ArtToolKind.brush:
+        return 'assets/tools/tool_brush.png';
+      case _ArtToolKind.highlighter:
+        return 'assets/tools/tool_highlighter.png';
+      case _ArtToolKind.spray:
+        return 'assets/tools/tool_spray.png';
+      case _ArtToolKind.eraser:
+        return 'assets/tools/tool_eraser.png';
+    }
   }
 }
 
@@ -793,6 +858,52 @@ class _ArtToolPainter extends CustomPainter {
         );
         break;
     }
+    _drawCuteFace(canvas, size, kind);
+  }
+
+  void _drawCuteFace(Canvas canvas, Size size, _ArtToolKind kind) {
+    final w = size.width;
+    final h = size.height;
+    // Yüz konumu araca göre değişir (gövde merkezi civarı)
+    double cx, cy, s;
+    switch (kind) {
+      case _ArtToolKind.pencil:
+        cx = w * 0.40; cy = h * 0.42; s = 1.0; break;
+      case _ArtToolKind.crayon:
+        cx = w * 0.40; cy = h * 0.45; s = 1.15; break;
+      case _ArtToolKind.marker:
+        cx = w * 0.40; cy = h * 0.40; s = 1.05; break;
+      case _ArtToolKind.brush:
+        cx = w * 0.40; cy = h * 0.30; s = 1.05; break;
+      case _ArtToolKind.highlighter:
+        cx = w * 0.40; cy = h * 0.42; s = 1.25; break;
+      case _ArtToolKind.spray:
+        cx = w * 0.42; cy = h * 0.55; s = 1.1; break;
+      case _ArtToolKind.eraser:
+        cx = w * 0.45; cy = h * 0.55; s = 1.15; break;
+    }
+    final eye = Paint()..color = const Color(0xFF2C2C4A);
+    final blush = Paint()..color = const Color(0x55FF7A9C);
+    final eyeR = 1.6 * s;
+    canvas.drawCircle(Offset(cx - 4.5 * s, cy), eyeR, eye);
+    canvas.drawCircle(Offset(cx + 4.5 * s, cy), eyeR, eye);
+    // ışıltı
+    final glint = Paint()..color = Colors.white;
+    canvas.drawCircle(Offset(cx - 4.2 * s, cy - 0.5), 0.55 * s, glint);
+    canvas.drawCircle(Offset(cx + 4.8 * s, cy - 0.5), 0.55 * s, glint);
+    // yanak
+    canvas.drawCircle(Offset(cx - 6 * s, cy + 2.2 * s), 1.4 * s, blush);
+    canvas.drawCircle(Offset(cx + 6 * s, cy + 2.2 * s), 1.4 * s, blush);
+    // gülümseme
+    final smile = Paint()
+      ..color = const Color(0xFF2C2C4A)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.1
+      ..strokeCap = StrokeCap.round;
+    final path = Path()
+      ..moveTo(cx - 2.2 * s, cy + 2.2 * s)
+      ..quadraticBezierTo(cx, cy + 4.0 * s, cx + 2.2 * s, cy + 2.2 * s);
+    canvas.drawPath(path, smile);
   }
 
   @override
@@ -815,6 +926,41 @@ class _BrushSizeDot extends StatelessWidget {
       decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
   }
+}
+
+/// Üç kademeli daire — fırça boyutu ikonu. Seçili boyutu daha koyu gösterir.
+class _BrushSizeIcon extends StatelessWidget {
+  final Color color;
+  final double size;
+  const _BrushSizeIcon({required this.color, required this.size});
+
+  @override
+  Widget build(BuildContext context) {
+    // Seçili kademe (0,1,2)
+    final t = (size / 40).clamp(0.0, 1.0);
+    final active = t < 0.34 ? 0 : (t < 0.67 ? 1 : 2);
+    final baseColor = color;
+    Color dotColor(int i) => i == active
+        ? baseColor
+        : baseColor.withOpacity(0.32);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        _dot(3.0, dotColor(0)),
+        const SizedBox(width: 2),
+        _dot(5.0, dotColor(1)),
+        const SizedBox(width: 2),
+        _dot(8.0, dotColor(2)),
+      ],
+    );
+  }
+
+  Widget _dot(double d, Color c) => Container(
+        width: d,
+        height: d,
+        decoration: BoxDecoration(color: c, shape: BoxShape.circle),
+      );
 }
 
 class _CompactDoneButton extends StatelessWidget {
