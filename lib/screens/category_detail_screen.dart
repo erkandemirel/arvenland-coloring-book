@@ -51,7 +51,7 @@ class CategoryDetailScreen extends StatelessWidget {
         children: [
           _CircleIconButton(
             icon: Icons.arrow_back_ios_new_rounded,
-            color: accent,
+            color: const Color(0xFF8B5CF6),
             onTap: () => Navigator.of(context).pop(),
           ),
           const Spacer(),
@@ -93,7 +93,7 @@ class CategoryDetailScreen extends StatelessWidget {
             style: GoogleFonts.nunito(
               fontSize: 26,
               fontWeight: FontWeight.w900,
-              color: AppTheme.textDark,
+              color: const Color(0xFF8B5CF6),
             ),
           ),
           const SizedBox(height: 4),
@@ -101,7 +101,7 @@ class CategoryDetailScreen extends StatelessWidget {
             '${drawings.length} eğlenceli resim seni bekliyor',
             style: GoogleFonts.nunito(
               fontSize: 14,
-              color: const Color(0xFF8888AA),
+              color: const Color(0xFFA78BFA),
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -193,7 +193,7 @@ class _CleanDrawingCard extends StatelessWidget {
                     style: GoogleFonts.nunito(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
-                      color: const Color(0xFF8888AA),
+                      color: const Color(0xFF8B5CF6),
                     ),
                   ),
                 ),

@@ -406,6 +406,7 @@ class _VerticalArtToolbar extends StatelessWidget {
             tooltip: 'Geri',
             onTap: onBack,
             size: isCompact ? 36 : 44,
+            iconColor: const Color(0xFF8B5CF6),
           ),
           SizedBox(height: isCompact ? 10 : 12),
           Tooltip(
@@ -626,6 +627,7 @@ class _HorizontalArtToolbar extends StatelessWidget {
                 tooltip: 'Geri',
                 onTap: onBack,
                 size: 40,
+                iconColor: const Color(0xFF8B5CF6),
               ),
               const SizedBox(width: 6),
               _CircularColorButton(
@@ -698,6 +700,7 @@ class _MiniIconButton extends StatelessWidget {
   final String? tooltip;
   final Widget? child;
   final double size;
+  final Color iconColor;
 
   const _MiniIconButton({
     required this.icon,
@@ -706,6 +709,7 @@ class _MiniIconButton extends StatelessWidget {
     this.tooltip,
     this.child,
     this.size = 44,
+    this.iconColor = const Color(0xFF5C5C7A),
   });
 
   @override
@@ -733,8 +737,7 @@ class _MiniIconButton extends StatelessWidget {
                 ),
               ],
             ),
-            child: child ??
-                Icon(icon, size: size * 0.45, color: const Color(0xFF5C5C7A)),
+            child: child ?? Icon(icon, size: size * 0.45, color: iconColor),
           ),
         ),
       ),

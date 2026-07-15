@@ -196,7 +196,7 @@ class _CompletionScreenState extends State<CompletionScreen>
             textAlign: TextAlign.center,
             style: GoogleFonts.nunito(
               fontSize: 15,
-              color: const Color(0xFF6B6B8A),
+              color: const Color(0xFF8B5CF6),
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -348,7 +348,7 @@ class _PillIconButton extends StatelessWidget {
               ),
             ],
           ),
-          child: Icon(icon, size: 20, color: AppTheme.textDark),
+          child: Icon(icon, size: 20, color: const Color(0xFF8B5CF6)),
         ),
       ),
     );
