@@ -1,7 +1,7 @@
 import '../models/drawing.dart';
 
 /// Her kategori için kapak resmi yolunu döndürür.
-/// Yeni kapak resimleri `assets/categories/` klasöründe olmalıdır.
+/// Tüm kapaklar aynı illüstrasyon sistemiyle, şeffaf arka planlı hazırlanır.
 class CategoryCover {
   static String pathOf(DrawingCategory category) {
     switch (category) {

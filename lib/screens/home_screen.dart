@@ -4,7 +4,6 @@ import '../data/drawings_data.dart';
 import '../models/drawing.dart';
 import '../theme/app_theme.dart';
 import '../widgets/category_cover.dart';
-import '../widgets/category_icon.dart';
 import 'category_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
