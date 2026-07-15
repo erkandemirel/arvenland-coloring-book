@@ -90,8 +90,32 @@ class _PaintingView extends StatelessWidget {
               isCompact ? 4 : 8,
             );
 
-            // Tek düzen: solda alanı dolduran tuval, sağda araç çubuğu.
-            // Dar ekranda araç çubuğu daralır ama asla tuvalin üstüne binmez.
+            // Dikey/dar ekran (telefon): tuval üstte tüm alanı doldurur,
+            // kalemler altta yatay şeritte dizilir.
+            final isPortraitPhone = constraints.maxWidth < 600 &&
+                constraints.maxHeight > constraints.maxWidth;
+            if (isPortraitPhone) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(6, 6, 6, 0),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: _PaintingCanvas(
+                        drawing: drawing,
+                        boundaryKey: canvasKey,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    _HorizontalArtToolbar(
+                      onComplete: () => _complete(context),
+                      onBack: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // Geniş/yatay ekran: solda tuval, sağda dikey araç çubuğu.
             return Padding(
               padding: outerPadding,
               child: Row(
@@ -142,7 +166,7 @@ class _PaintingCanvas extends StatelessWidget {
         // [0.72, 1.4] aralığına sıkıştırılır. Telefon/tablette tam dolu,
         // çok geniş PC ekranında ortalanır.
         final available = constraints.maxWidth / constraints.maxHeight;
-        final aspect = available.clamp(0.72, 1.4);
+        final aspect = available.clamp(0.62, 1.4);
         final cornerRadius = constraints.maxWidth < 320 ? 16.0 : 24.0;
 
         return Center(
@@ -470,9 +494,11 @@ class _VerticalArtToolbar extends StatelessWidget {
     );
   }
 
-  Future<void> _confirmReset(
-      BuildContext context, PaintingProvider provider) async {
-    if (!provider.canUndo) return;
+}
+
+Future<void> _confirmReset(
+    BuildContext context, PaintingProvider provider) async {
+  if (!provider.canUndo) return;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -535,13 +561,123 @@ class _VerticalArtToolbar extends StatelessWidget {
       ),
     );
   }
-}
 
 class _ToolDef {
   final BrushType type;
   final String label;
   final _ArtToolKind kind;
   const _ToolDef(this.type, this.label, this.kind);
+}
+
+// ── Alt yatay araç şeridi (dikey telefon ekranı) ─────────────────────────────
+
+class _HorizontalArtToolbar extends StatelessWidget {
+  final VoidCallback onComplete;
+  final VoidCallback onBack;
+
+  const _HorizontalArtToolbar({
+    required this.onComplete,
+    required this.onBack,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<PaintingProvider>();
+    final safeBottom = MediaQuery.of(context).padding.bottom;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: math.max(4, safeBottom * 0.5)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Üst sıra: kalemler yatay kaydırılabilir
+          SizedBox(
+            height: 64,
+            child: ScrollConfiguration(
+              behavior: const _NoGlowScrollBehavior(),
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                children: [
+                  for (final t in _VerticalArtToolbar._tools)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 5),
+                      child: _ArtToolChip(
+                        def: t,
+                        color: provider.selectedColor,
+                        selected: provider.selectedBrush == t.type,
+                        onTap: () => provider.setBrush(t.type),
+                        onLongPress: () =>
+                            _openBrushSizePopover(context, provider),
+                        size: 58,
+                        compact: true,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Alt sıra: geri, renk, boyut, geri al/yinele/temizle, bitti
+          Row(
+            children: [
+              _MiniIconButton(
+                icon: Icons.arrow_back_ios_new_rounded,
+                tooltip: 'Geri',
+                onTap: onBack,
+                size: 40,
+              ),
+              const SizedBox(width: 6),
+              _CircularColorButton(
+                color: provider.selectedColor,
+                onTap: () => _openColorPicker(context, provider),
+                size: 44,
+              ),
+              const SizedBox(width: 6),
+              _MiniIconButton(
+                icon: Icons.tune_rounded,
+                tooltip: 'Fırça Boyutu',
+                onTap: () => _openBrushSizePopover(context, provider),
+                size: 40,
+                child: _BrushSizeIcon(
+                  color: provider.isEraser
+                      ? Colors.grey.shade500
+                      : provider.selectedColor,
+                  size: provider.brushSize,
+                ),
+              ),
+              const Spacer(),
+              _MiniIconButton(
+                icon: Icons.undo_rounded,
+                tooltip: 'Geri Al',
+                enabled: provider.canUndo,
+                onTap: provider.undo,
+                size: 40,
+              ),
+              const SizedBox(width: 4),
+              _MiniIconButton(
+                icon: Icons.redo_rounded,
+                tooltip: 'Yinele',
+                enabled: provider.canRedo,
+                onTap: provider.redo,
+                size: 40,
+              ),
+              const SizedBox(width: 4),
+              _MiniIconButton(
+                icon: Icons.delete_outline_rounded,
+                tooltip: 'Temizle',
+                enabled: provider.canUndo,
+                onTap: () => _confirmReset(context, provider),
+                size: 40,
+              ),
+              const Spacer(),
+              _CompactDoneButton(onTap: onComplete, compact: true),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 enum _ArtToolKind {
