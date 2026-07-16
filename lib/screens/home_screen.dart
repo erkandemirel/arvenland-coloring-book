@@ -43,9 +43,9 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppTheme.bgStart, AppTheme.bgEnd],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: AppTheme.softRainbowBg,
           ),
         ),
         child: SafeArea(

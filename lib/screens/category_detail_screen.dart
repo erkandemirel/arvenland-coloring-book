@@ -22,9 +22,9 @@ class CategoryDetailScreen extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppTheme.bgStart, AppTheme.bgEnd],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: AppTheme.softRainbowBg,
           ),
         ),
         child: SafeArea(
@@ -82,28 +82,75 @@ class CategoryDetailScreen extends StatelessWidget {
     );
   }
 
+  static const _titleColors = [
+    AppTheme.primary,        // H
+    Color(0xFFFFA24C),       // a
+    AppTheme.accent,         // d
+    AppTheme.success,        // i
+    AppTheme.secondary,      // ' '
+    AppTheme.secondary,      // b
+    AppTheme.lavender,       // o
+    AppTheme.pink,           // y
+    AppTheme.primary,        // a
+    Color(0xFFFFA24C),       // l
+    AppTheme.success,        // ı
+    AppTheme.lavender,       // m
+    AppTheme.pink,           // !
+  ];
+
   Widget _buildTitle() {
+    const text = 'Hadi boyayalım!';
+    final baseStyle = GoogleFonts.nunito(
+      fontSize: 28,
+      fontWeight: FontWeight.w900,
+      letterSpacing: 0.3,
+      shadows: const [
+        Shadow(
+          color: Color(0x1AFF7A59),
+          blurRadius: 8,
+          offset: Offset(0, 2),
+        ),
+      ],
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            'Hadi boyayalım! 🖍️',
-            style: GoogleFonts.nunito(
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
-              color: const Color(0xFF8B5CF6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                RichText(
+                  text: TextSpan(
+                    children: List.generate(text.length, (i) {
+                      return TextSpan(
+                        text: text[i],
+                        style: baseStyle.copyWith(
+                          color: _titleColors[i % _titleColors.length],
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${drawings.length} eğlenceli resim seni bekliyor',
+                  style: GoogleFonts.nunito(
+                    fontSize: 14,
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            '${drawings.length} eğlenceli resim seni bekliyor',
-            style: GoogleFonts.nunito(
-              fontSize: 14,
-              color: const Color(0xFFA78BFA),
-              fontWeight: FontWeight.w600,
-            ),
+          const SizedBox(width: 8),
+          Image.asset(
+            'assets/categories/icon_palette.png',
+            width: 62,
+            height: 62,
+            fit: BoxFit.contain,
           ),
         ],
       ),

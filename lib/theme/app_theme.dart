@@ -9,8 +9,20 @@ class AppTheme {
   static const Color success = Color(0xFF6FD39B); // mint
   static const Color lavender = Color(0xFFA88BFF);
   static const Color pink = Color(0xFFFF8DB6);
-  static const Color bgStart = Color(0xFFFFFCF7);
-  static const Color bgEnd = Color(0xFFF4F6FB);
+  // Almost white with the barest warm tint — lets the soft rainbow overlay show.
+  static const Color bgStart = Color(0xFFFFFDFB);
+  static const Color bgEnd = Color(0xFFF7F9FF);
+
+  // Very subtle rainbow wash used across full-page backgrounds.
+  static const List<Color> softRainbowBg = [
+    Color(0xFFFFF4F2), // whisper coral
+    Color(0xFFFFF7EC), // whisper peach
+    Color(0xFFFDFBEC), // whisper lemon
+    Color(0xFFEEFBF3), // whisper mint
+    Color(0xFFEDF6FF), // whisper sky
+    Color(0xFFF3EEFF), // whisper lavender
+    Color(0xFFFFF0F6), // whisper pink
+  ];
   static const Color textDark = Color(0xFF3D3D5C);
   static const Color textSoft = Color(0xFF777799);
 
