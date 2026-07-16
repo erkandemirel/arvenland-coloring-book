@@ -102,15 +102,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   static const _titleColors = [
-    Color(0xFFFF6B6B),
-    Color(0xFFFF8C42),
-    Color(0xFF6BCB77),
-    Color(0xFFA78BFA),
-    Color(0xFF74B9FF),
-    Color(0xFFFFD166),
-    Color(0xFFC084FC),
+    AppTheme.primary,
+    Color(0xFFFFA24C),
+    AppTheme.success,
+    AppTheme.lavender,
+    AppTheme.secondary,
+    AppTheme.accent,
+    AppTheme.pink,
     Color(0xFF4D96FF),
-    Color(0xFFFF8C42),
+    Color(0xFFFFA24C),
   ];
 
   Widget _buildArvenlandTitle() {
@@ -118,7 +118,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final style = GoogleFonts.nunito(
       fontSize: 32,
       fontWeight: FontWeight.w900,
-      letterSpacing: 0.5,
+      letterSpacing: 0.4,
+      shadows: const [
+        Shadow(
+          color: Color(0x1AFF7A59),
+          blurRadius: 8,
+          offset: Offset(0, 2),
+        ),
+      ],
     );
     return RichText(
       text: TextSpan(
@@ -139,12 +146,13 @@ class _HomeScreenState extends State<HomeScreen> {
         'Bir kategori seç, renkleri keşfet! 🎨',
         style: GoogleFonts.nunito(
           fontSize: 16,
-          color: const Color(0xFF8B5CF6),
-          fontWeight: FontWeight.w700,
+          color: AppTheme.lavender,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );
   }
+
 
   Widget _buildCarousel(List<DrawingCategory> categories) {
     return PageView.builder(

@@ -759,7 +759,7 @@ class _CircularColorButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconSize = size * 0.42;
+    final iconSize = size * 0.54;
     return Semantics(
       button: true,
       label: 'Renkler',
@@ -790,9 +790,13 @@ class _CircularColorButton extends StatelessWidget {
                         Color(0xFFFF5A5A),
                       ],
                     ),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.85),
+                      width: 2,
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: color.withOpacity(0.22),
+                        color: color.withOpacity(0.24),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -800,27 +804,16 @@ class _CircularColorButton extends StatelessWidget {
                   ),
                 ),
               ),
-              Container(
-                width: iconSize,
-                height: iconSize,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.9),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.06),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: CustomPaint(painter: _ColorfulPaletteIconPainter()),
+              CustomPaint(
+                size: Size.square(iconSize),
+                painter: _ColorfulPaletteIconPainter(),
               ),
             ],
           ),
         ),
       ),
     );
+
   }
 }
 
@@ -829,23 +822,36 @@ class _ColorfulPaletteIconPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2;
     final cy = size.height / 2;
-    final r = size.width * 0.42;
+    final r = size.width * 0.34;
     final palette = Path()
       ..addOval(Rect.fromCircle(center: Offset(cx, cy), radius: r));
     palette.fillType = PathFillType.evenOdd;
     palette.addOval(Rect.fromCircle(
-        center: Offset(cx + r * 0.45, cy + r * 0.15), radius: r * 0.22));
-    canvas.drawPath(palette, Paint()..color = const Color(0xFFF5CBA7));
+      center: Offset(cx + r * 0.62, cy + r * 0.18),
+      radius: r * 0.22,
+    ));
+
+    canvas.drawPath(palette, Paint()..color = const Color(0xFFF7D19B));
+    canvas.drawPath(
+      palette,
+      Paint()
+        ..color = const Color(0xFFF0B77E)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = size.width * 0.08,
+    );
+
     final dots = <Color, Offset>{
-      const Color(0xFFFF5A5A): Offset(cx - r * 0.45, cy - r * 0.30),
-      const Color(0xFFFFD166): Offset(cx - r * 0.05, cy - r * 0.55),
-      const Color(0xFF6BCB77): Offset(cx + r * 0.35, cy - r * 0.30),
-      const Color(0xFF4D96FF): Offset(cx - r * 0.50, cy + r * 0.25),
-      const Color(0xFFA78BFA): Offset(cx - r * 0.05, cy + r * 0.10),
+      const Color(0xFFFF5A5A): Offset(cx - r * 0.46, cy - r * 0.30),
+      const Color(0xFFFFD166): Offset(cx - r * 0.02, cy - r * 0.52),
+      const Color(0xFF6BCB77): Offset(cx + r * 0.36, cy - r * 0.22),
+      const Color(0xFF4D96FF): Offset(cx - r * 0.48, cy + r * 0.18),
+      const Color(0xFFA78BFA): Offset(cx - r * 0.06, cy + r * 0.12),
     };
-    dots.forEach((color, pos) {
-      canvas.drawCircle(pos, r * 0.18, Paint()..color = color);
+    dots.forEach((dotColor, pos) {
+      canvas.drawCircle(pos, r * 0.16, Paint()..color = dotColor);
     });
+
+
   }
 
   @override
@@ -875,8 +881,8 @@ class _ArtToolChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = def.kind == _ArtToolKind.eraser ? Colors.grey.shade500 : color;
     final highlightColor = selected
-        ? accent.withOpacity(0.16)
-        : Colors.white.withOpacity(compact ? 0.82 : 0.92);
+        ? accent.withOpacity(compact ? 0.22 : 0.18)
+        : Colors.white.withOpacity(compact ? 0.88 : 0.94);
 
     return Tooltip(
       message: def.label,
@@ -896,24 +902,27 @@ class _ArtToolChip extends StatelessWidget {
             decoration: BoxDecoration(
               color: highlightColor,
               borderRadius: BorderRadius.circular(compact ? 15 : 18),
-              border: selected
-                  ? Border.all(color: accent.withOpacity(0.22), width: 1.5)
-                  : null,
+              border: Border.all(
+                color: selected
+                    ? accent.withOpacity(0.34)
+                    : const Color(0xFFEDEAF6),
+                width: selected ? 1.8 : 1.1,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(selected ? 0.07 : 0.04),
-                  blurRadius: compact ? 5 : 7,
-                  offset: const Offset(0, 2),
+                  color: accent.withOpacity(selected ? 0.18 : 0.05),
+                  blurRadius: compact ? 7 : 10,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
             alignment: Alignment.center,
             child: AnimatedScale(
-              scale: selected ? 1.06 : 1.0,
+              scale: selected ? 1.08 : 1.0,
               duration: const Duration(milliseconds: 180),
               curve: Curves.easeOutBack,
               child: Padding(
-                padding: EdgeInsets.all(compact ? 5 : 6),
+                padding: EdgeInsets.all(compact ? 3 : 4),
                 child: _TintableToolIcon(
                   kind: def.kind,
                   color: accent,
@@ -924,6 +933,7 @@ class _ArtToolChip extends StatelessWidget {
         ),
       ),
     );
+
   }
 }
 
