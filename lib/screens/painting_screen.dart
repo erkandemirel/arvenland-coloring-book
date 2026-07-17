@@ -10,6 +10,7 @@ import '../models/drawing.dart';
 import '../models/stroke.dart';
 import '../providers/painting_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_background.dart';
 import '../widgets/drawing_image.dart';
 import 'completion_screen.dart';
 
@@ -74,8 +75,9 @@ class _PaintingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF6EE),
-      body: SafeArea(
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
+        child: SafeArea(
         left: false,
         right: false,
         bottom: false,
@@ -142,6 +144,7 @@ class _PaintingView extends StatelessWidget {
               ),
             );
           },
+        ),
         ),
       ),
     );

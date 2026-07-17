@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../data/drawings_data.dart';
 import '../models/drawing.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_background.dart';
 import '../widgets/category_cover.dart';
 import 'category_detail_screen.dart';
 
@@ -40,14 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final categories = _activeCategories;
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: AppTheme.softRainbowBg,
-          ),
-        ),
+      body: AppBackground(
         child: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

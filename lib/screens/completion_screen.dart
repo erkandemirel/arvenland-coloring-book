@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../models/drawing.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_background.dart';
 import 'home_screen.dart';
 
 class CompletionScreen extends StatefulWidget {
@@ -107,14 +108,8 @@ class _CompletionScreenState extends State<CompletionScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [AppTheme.bgStart, AppTheme.bgEnd],
-          ),
-        ),
+      backgroundColor: Colors.transparent,
+      body: AppBackground(
         child: SafeArea(
           child: Stack(
             children: [
