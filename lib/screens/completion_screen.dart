@@ -233,9 +233,9 @@ class _CompletionScreenState extends State<CompletionScreen>
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFFFFF6E5), Color(0xFFFFE9D6)],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
+                    colors: AppTheme.softRainbowBg,
                   ),
                 ),
                 child: Row(
@@ -249,10 +249,11 @@ class _CompletionScreenState extends State<CompletionScreen>
                     const SizedBox(width: 10),
                     Text(
                       'Süper ressam!',
-                      style: GoogleFonts.nunito(
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFFE6941C),
-                        fontSize: 16,
+                      style: GoogleFonts.fredoka(
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textDark,
+                        fontSize: 17,
+                        letterSpacing: 0.3,
                       ),
                     ),
                   ],
@@ -276,7 +277,8 @@ class _CompletionScreenState extends State<CompletionScreen>
                 child: _BigActionButton(
                   icon: Icons.save_alt_rounded,
                   label: 'Kaydet',
-                  color: AppTheme.success,
+                  gradient: const [Color(0xFFD8F5E4), Color(0xFFB6ECD0)],
+                  foreground: const Color(0xFF2E8C63),
                   onTap: () => _snack(context, 'Resim kaydedildi! 🎉',
                       AppTheme.success, Icons.check_circle_rounded),
                 ),
@@ -286,7 +288,8 @@ class _CompletionScreenState extends State<CompletionScreen>
                 child: _BigActionButton(
                   icon: Icons.share_rounded,
                   label: 'Paylaş',
-                  color: AppTheme.secondary,
+                  gradient: const [Color(0xFFDCEEFF), Color(0xFFBFDFFF)],
+                  foreground: const Color(0xFF2E6FB8),
                   onTap: () => _snack(context, 'Paylaşım yakında geliyor!',
                       AppTheme.secondary, Icons.share_rounded),
                 ),
@@ -299,8 +302,13 @@ class _CompletionScreenState extends State<CompletionScreen>
             child: _BigActionButton(
               icon: Icons.palette_rounded,
               label: 'Yeni Çizim Seç',
-              color: AppTheme.primary,
-              filled: true,
+              gradient: const [
+                Color(0xFFFFB199),
+                Color(0xFFFF8DB6),
+                Color(0xFFA88BFF),
+              ],
+              foreground: Colors.white,
+              primary: true,
               onTap: () => Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const HomeScreen()),
                 (route) => false,
@@ -353,56 +361,65 @@ class _PillIconButton extends StatelessWidget {
 class _BigActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
-  final Color color;
-  final bool filled;
+  final List<Color> gradient;
+  final Color foreground;
+  final bool primary;
   final VoidCallback onTap;
 
   const _BigActionButton({
     required this.icon,
     required this.label,
-    required this.color,
+    required this.gradient,
+    required this.foreground,
     required this.onTap,
-    this.filled = false,
+    this.primary = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bg = filled ? color : Colors.white;
-    final fg = filled ? Colors.white : color;
+    final shadowColor = gradient.last.withOpacity(primary ? 0.45 : 0.30);
     return Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(20),
-      elevation: 0,
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(22),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+          padding: EdgeInsets.symmetric(
+            vertical: primary ? 18 : 16,
+            horizontal: 14,
+          ),
           decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(20),
-            border: filled
-                ? null
-                : Border.all(color: color.withOpacity(0.25), width: 2),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: gradient,
+            ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.85),
+              width: primary ? 2.5 : 2,
+            ),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(filled ? 0.35 : 0.15),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
+                color: shadowColor,
+                blurRadius: 20,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 22, color: fg),
-              const SizedBox(width: 8),
+              Icon(icon, size: primary ? 24 : 22, color: foreground),
+              const SizedBox(width: 10),
               Text(
                 label,
-                style: GoogleFonts.nunito(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: fg,
+                style: GoogleFonts.fredoka(
+                  fontSize: primary ? 19 : 17,
+                  fontWeight: FontWeight.w600,
+                  color: foreground,
+                  letterSpacing: 0.4,
                 ),
               ),
             ],
