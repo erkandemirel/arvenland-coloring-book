@@ -249,8 +249,8 @@ class _CompletionScreenState extends State<CompletionScreen>
                     const SizedBox(width: 10),
                     Text(
                       'Süper ressam!',
-                      style: GoogleFonts.fredoka(
-                        fontWeight: FontWeight.w700,
+                      style: GoogleFonts.nunito(
+                        fontWeight: FontWeight.w800,
                         color: AppTheme.textDark,
                         fontSize: 17,
                         letterSpacing: 0.3,
@@ -415,9 +415,9 @@ class _BigActionButton extends StatelessWidget {
               const SizedBox(width: 10),
               Text(
                 label,
-                style: GoogleFonts.fredoka(
+                style: GoogleFonts.nunito(
                   fontSize: primary ? 19 : 17,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w800,
                   color: foreground,
                   letterSpacing: 0.4,
                 ),
